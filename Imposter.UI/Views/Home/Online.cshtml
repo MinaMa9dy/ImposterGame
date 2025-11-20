@@ -1,0 +1,29 @@
+﻿@model List<RoomViewModel>
+@{
+    ViewData["Title"] = "Online";
+}
+
+<h1>Online</h1>
+<h2>
+    @ViewBag.IsOnline
+</h2>
+
+<div>
+    <h4>Room</h4>
+    <hr />
+    @foreach(var item in Model)
+    {
+        <div>
+            @item.roomId
+        </div>
+        
+        <div>
+            @item.InGame
+        </div>
+        <hr/>
+    }
+</div>
+<div>
+    @Html.ActionLink("Edit", "Edit", new { /* id = Model.PrimaryKey */ }) |
+    <a asp-action="Index">Back to List</a>
+</div>
