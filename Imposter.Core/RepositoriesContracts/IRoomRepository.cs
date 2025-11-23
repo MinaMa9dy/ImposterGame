@@ -12,8 +12,10 @@ namespace Imposter.Core.RepositoriesContracts
         Task<int> CreateRoom(Room room);
         Task<Room?> GetRoomById(Guid roomId);
         Task<bool> IsRoomExist(Guid roomId);
-        Task<int> UpdateRoom(Room room);
         Task<int> DeleteRoom(Room room);
-        Task<ICollection<Room>> GetRooms();
+        Task<List<Room>> GetRooms();
+        Task<int> AddPlayerToRoom(Player player,Guid roomId);
+        Task<int> RemovePlayerFromRoom(Player player, Guid roomId);
+        Task<int> UpdateRoom(Room room);
     }
 }

@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Imposter.UI", "Imposter.UI\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Imposter.Infrastructure", "Imposter.Infrastructure\Imposter.Infrastructure.csproj", "{DACC20C3-70B5-42BA-A2AD-AD9F7636C5B4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Imposter.CoreTests", "Imposter.CoreTests\Imposter.CoreTests.csproj", "{3C1FAB30-6516-435A-A182-E69F6A80F4F0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{DACC20C3-70B5-42BA-A2AD-AD9F7636C5B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DACC20C3-70B5-42BA-A2AD-AD9F7636C5B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DACC20C3-70B5-42BA-A2AD-AD9F7636C5B4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C1FAB30-6516-435A-A182-E69F6A80F4F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C1FAB30-6516-435A-A182-E69F6A80F4F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C1FAB30-6516-435A-A182-E69F6A80F4F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C1FAB30-6516-435A-A182-E69F6A80F4F0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

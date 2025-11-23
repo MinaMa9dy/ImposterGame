@@ -13,8 +13,8 @@ namespace Imposter.Core.Domain.Entities
         public Player? Host { get; set; }
         public List<Player> Players { get; set; } = new List<Player>();
         public bool InGame { get; set; }
-        // TODO stage of the game
-        
+        public int Stage { get; set; }
+
 
     }
 }

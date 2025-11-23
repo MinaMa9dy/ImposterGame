@@ -11,6 +11,6 @@ namespace Imposter.Core.Domain.Entities
         public Guid? RoomId { get; set; }
         [ForeignKey(nameof(RoomId))]
         public Room? Room { get; set; }
-        public List<string> Connections { get; set; } = new List<string>();
+        public List<Connection> Connections { get; set; } = new List<Connection>();
     }
 }

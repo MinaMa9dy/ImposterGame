@@ -1,0 +1,71 @@
+﻿@model IEnumerable<PlayerViewModel>
+
+@{
+    ViewData["Title"] = "Lobby";
+    var roomId = ViewBag.roomId;
+}
+
+<h1>Lobby</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Name)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.State)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Score)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.State)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Score)
+            </td>
+            <td>
+                @Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |
+                @Html.ActionLink("Details", "Details", new { /* id=item.PrimaryKey */ }) |
+                @Html.ActionLink("Delete", "Delete", new { /* id=item.PrimaryKey */ })
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+<div>
+    <button class="btn btn-primary" onclick="start()">Start Game</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+<script>
+    var connection = new signalR.HubConnectionBuilder()
+        .withUrl("/gameHub")
+        .build();
+    connection.start()
+    .then(() => console.log("SignalR connected"))
+    .catch(err => console.error(err.toString()));
+    // Handle incoming messages
+    connection.on("ReceiveMessage", function(message) {
+        alert(message); // or update the DOM instead of alert
+    });
+
+
+    function start() {
+        connection.invoke("StartGame","@roomId")
+            .catch(err => console.error(err.toString()));
+    }
+</script>

@@ -4,6 +4,7 @@ using Imposter.Infrastructure.Dbcontext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Imposter.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251121204910_setnullForPlayer")]
+    partial class setnullForPlayer
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,26 +25,15 @@ namespace Imposter.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Imposter.Core.Domain.Entities.Connection", b =>
-                {
-                    b.Property<string>("ConnectionId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<Guid?>("PlayerId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("ConnectionId");
-
-                    b.HasIndex("PlayerId");
-
-                    b.ToTable("connections");
-                });
-
             modelBuilder.Entity("Imposter.Core.Domain.Entities.Player", b =>
                 {
                     b.Property<Guid>("PlayerId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.PrimitiveCollection<string>("Connections")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
@@ -105,13 +97,6 @@ namespace Imposter.Infrastructure.Migrations
                     b.ToTable("secretWords");
                 });
 
-            modelBuilder.Entity("Imposter.Core.Domain.Entities.Connection", b =>
-                {
-                    b.HasOne("Imposter.Core.Domain.Entities.Player", null)
-                        .WithMany("Connections")
-                        .HasForeignKey("PlayerId");
-                });
-
             modelBuilder.Entity("Imposter.Core.Domain.Entities.Player", b =>
                 {
                     b.HasOne("Imposter.Core.Domain.Entities.Room", "Room")
@@ -136,11 +121,6 @@ namespace Imposter.Infrastructure.Migrations
                     b.Navigation("Host");
 
                     b.Navigation("SecretWord");
-                });
-
-            modelBuilder.Entity("Imposter.Core.Domain.Entities.Player", b =>
-                {
-                    b.Navigation("Connections");
                 });
 
             modelBuilder.Entity("Imposter.Core.Domain.Entities.Room", b =>

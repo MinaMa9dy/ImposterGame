@@ -4,6 +4,7 @@ using Imposter.Core.Services;
 using Imposter.Core.ServicesContracts;
 using Imposter.Infrastructure.Dbcontext;
 using Imposter.Infrastructure.Repositories;
+using Imposter.UI.Hubs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
@@ -21,10 +22,11 @@ builder.Services.AddDbContext<AppDbContext>(
                 options => options.UseSqlServer(builder.Configuration.GetConnectionString("cs"))
                 );
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-
+builder.Services.AddSignalR();
 //Repositories
 builder.Services.AddScoped<IPlayerRepository, PlayerRepository>();
 builder.Services.AddScoped<IRoomRepository, RoomRepository>();
+builder.Services.AddScoped<IConnectionRepository, ConnectionRepository>();
 
 //Services
 builder.Services.AddScoped<IGameService, GameService>();
@@ -47,7 +49,7 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapStaticAssets();
-
+app.MapHub<GameHub>("/gameHub");
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")

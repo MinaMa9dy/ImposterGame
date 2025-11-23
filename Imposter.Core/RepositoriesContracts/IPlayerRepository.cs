@@ -14,6 +14,7 @@ namespace Imposter.Core.RepositoriesContracts
         Task<bool> IsPlayerExist(Guid playerId);
         Task<int> RemovePlayer(Player player);
         Task<int> UpdatePlayer(Player player);
+        Task<int> AddConnectionToPlayer(Player player, string connectionId);
 
     }
 }

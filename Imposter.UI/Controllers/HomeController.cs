@@ -1,4 +1,5 @@
 using AutoMapper;
+using Imposter.Core.Domain.Entities;
 using Imposter.Core.ServicesContracts;
 using Imposter.Core.ViewModels;
 using Imposter.UI.Models;
@@ -25,10 +26,11 @@ namespace Imposter.UI.Controllers
         {
             return View();
         }
-        [HttpPost("Create")]
-        public IActionResult Create()
+        [HttpGet("Create")]
+        public async Task<IActionResult> Create()
         {
-            return RedirectToAction("Index");
+            var room = await _gameService.CreateRoom();
+            return RedirectToAction("Index", "Room", new { roomId = room.RoomId });
         }
         [HttpGet("Online")]
         public async Task<IActionResult> Online()
@@ -39,9 +41,14 @@ namespace Imposter.UI.Controllers
 
             return View(roomsVM);
         }
+        [HttpGet]
+        public async Task<IActionResult> RemoveAllRooms()
+        {
+            await _gameService.RemoveAllRooms();
+            return Ok("All rooms removed.");
+        }
 
-        
 
-        
+
     }
 }

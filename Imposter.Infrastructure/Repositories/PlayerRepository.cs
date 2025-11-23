@@ -14,6 +14,19 @@ namespace Imposter.Infrastructure.Repositories
             _appDbContext = appDbContext;
         }
 
+        public async Task<int> AddConnectionToPlayer(Player player, string connectionId)
+        {
+            var ThePlayer = await GetPlayerById(player.PlayerId.Value);
+            var Connection = new Connection
+            {
+                ConnectionId = connectionId,
+                PlayerId = ThePlayer.PlayerId.Value
+            };
+            ThePlayer.Connections.Add(Connection);
+            return await _appDbContext.SaveChangesAsync();
+
+        }
+
         public async Task<int> AddPlayer(Player player)
         {
             await _appDbContext.players.AddAsync(player);
