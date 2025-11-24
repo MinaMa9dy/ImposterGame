@@ -13,14 +13,6 @@ namespace Imposter.Infrastructure.Repositories
             _appDbContext = appDbContext;
         }
 
-        public async Task<int> AddPlayerToRoom(Player player, Guid roomId)
-        {
-            var room = await GetRoomById(roomId);
-            room.Players.Add(player);
-            _appDbContext.rooms.Update(room);
-            var res = await _appDbContext.SaveChangesAsync();
-            return res;
-        }
 
         public async Task<int> CreateRoom(Room room)
         {
@@ -29,8 +21,9 @@ namespace Imposter.Infrastructure.Repositories
             return res;
         }
 
-        public async Task<int> DeleteRoom(Room room)
+        public async Task<int> DeleteRoom(Guid roomId)
         {
+            var room = await GetRoomById(roomId);
             _appDbContext.rooms.Remove(room);
             var res = await _appDbContext.SaveChangesAsync();
             return res;
@@ -38,15 +31,18 @@ namespace Imposter.Infrastructure.Repositories
 
         public async Task<Room?> GetRoomById(Guid roomId)
         {
-            Room? room = await _appDbContext.rooms.Include(r => r.Players).Include(r => r.Host).Include(r => r.SecretWord).FirstOrDefaultAsync(r=>r.RoomId == roomId);
+            Room? room = await _appDbContext.rooms.FirstOrDefaultAsync(r=>r.RoomId == roomId);
+            return room;
+        }
+        public async Task<Room?> GetRoomByIdWithAll(Guid roomId)
+        {
+            Room? room = await _appDbContext.rooms.Include(r => r.Players).Include(r => r.Host).Include(r => r.SecretWord).FirstOrDefaultAsync(r => r.RoomId == roomId);
             return room;
         }
 
         public async Task<List<Room>> GetRooms()
         {
-            List<Room> rooms = new List<Room>();
-            rooms = await _appDbContext.rooms.Include(r => r.Players).Include(r => r.SecretWord).ToListAsync();
-            return rooms;
+            return await _appDbContext.rooms.ToListAsync();
 
         }
 
@@ -56,12 +52,14 @@ namespace Imposter.Infrastructure.Repositories
             return IsExist;
         }
 
-        public async Task<int> RemovePlayerFromRoom(Player player, Guid roomId)
+        public async Task<bool> MakePlayerHost(Guid playerId, Guid roomId)
         {
             var room = await GetRoomById(roomId);
-            room.Players.Remove(player);
+            room.HostId = playerId;
+            _appDbContext.rooms.Update(room);
             var res = await _appDbContext.SaveChangesAsync();
-            return res;
+            return res > 0;
+
         }
 
         public async Task<int> UpdateRoom(Room dto)   // dto coming from client

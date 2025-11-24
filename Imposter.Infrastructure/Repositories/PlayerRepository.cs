@@ -14,18 +14,7 @@ namespace Imposter.Infrastructure.Repositories
             _appDbContext = appDbContext;
         }
 
-        public async Task<int> AddConnectionToPlayer(Player player, string connectionId)
-        {
-            var ThePlayer = await GetPlayerById(player.PlayerId.Value);
-            var Connection = new Connection
-            {
-                ConnectionId = connectionId,
-                PlayerId = ThePlayer.PlayerId.Value
-            };
-            ThePlayer.Connections.Add(Connection);
-            return await _appDbContext.SaveChangesAsync();
-
-        }
+        
 
         public async Task<int> AddPlayer(Player player)
         {
@@ -39,6 +28,11 @@ namespace Imposter.Infrastructure.Repositories
             Player? player = await _appDbContext.players.FirstOrDefaultAsync(p => p.PlayerId == playerId);
             return player;
         }
+        public async Task<Player?> GetPlayerByIdWithAll(Guid playerId)
+        {
+            Player? player = await _appDbContext.players.Include(p => p.Connections).Include(p => p.Room).FirstOrDefaultAsync(p => p.PlayerId == playerId);
+            return player;
+        }
 
         public async Task<bool> IsPlayerExist(Guid playerId)
         {
@@ -47,8 +41,9 @@ namespace Imposter.Infrastructure.Repositories
         }
 
         
-        public async Task<int> RemovePlayer(Player player)
+        public async Task<int> RemovePlayer(Guid playerId)
         {
+            var player = await GetPlayerById(playerId);
             _appDbContext.players.Remove(player);
             int res = await _appDbContext.SaveChangesAsync();
             return res;
@@ -56,9 +51,33 @@ namespace Imposter.Infrastructure.Repositories
 
         public async Task<int> UpdatePlayer(Player player)
         {
-            _appDbContext.players.Update(player);
+            var existingPlayer = await GetPlayerById(player.PlayerId.Value);
+            existingPlayer.Name = player.Name;
+            existingPlayer.State = player.State;
+            existingPlayer.Score = player.Score;
+            //_appDbContext.players.Update(player);
             int res = await _appDbContext.SaveChangesAsync();
             return res;
+        }
+        public async Task<int> AddPlayerToRoom(Guid playerId, Guid roomId)
+        {
+            var player = await GetPlayerById(playerId);
+            player.RoomId = roomId;
+            _appDbContext.players.Update(player);
+            return await _appDbContext.SaveChangesAsync();
+        }
+        public async Task<int> RemovePlayerFromRoom(Guid playerId, Guid roomId)
+        {
+            var player = await GetPlayerById(playerId);
+            player.RoomId = null;
+            _appDbContext.players.Update(player);
+            return await _appDbContext.SaveChangesAsync();
+        }
+        public async Task<List<Player>> GetAllPlayers()
+        {
+            List<Player> players = new List<Player>();
+            players = await _appDbContext.players.ToListAsync();
+            return players;
         }
     }
 }

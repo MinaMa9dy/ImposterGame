@@ -11,10 +11,13 @@ namespace Imposter.Core.RepositoriesContracts
     {
         Task<int> AddPlayer(Player player);
         Task<Player?> GetPlayerById(Guid playerId);
+        Task<Player?> GetPlayerByIdWithAll(Guid playerId);
         Task<bool> IsPlayerExist(Guid playerId);
-        Task<int> RemovePlayer(Player player);
+        Task<int> RemovePlayer(Guid playerId);
         Task<int> UpdatePlayer(Player player);
-        Task<int> AddConnectionToPlayer(Player player, string connectionId);
+        Task<int> AddPlayerToRoom(Guid playerId, Guid roomId);
+        Task<int> RemovePlayerFromRoom(Guid playerId, Guid roomId);
+        Task<List<Player>> GetAllPlayers();
 
     }
 }

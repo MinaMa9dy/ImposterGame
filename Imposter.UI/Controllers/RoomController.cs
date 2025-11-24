@@ -36,7 +36,12 @@ namespace Imposter.UI.Controllers
         public async Task<IActionResult> Index(Guid roomId)
         {
             
-            var player = HttpContext.Session.GetObject<Player>("PlayerName");
+            var theplayer = HttpContext.Session.GetObject<Player>("PlayerName");
+            Player? player = null;
+            if (theplayer is not null)
+            {
+                player = await _gameService.GetPlayer(theplayer.PlayerId.Value);
+            }
             var room = await _gameService.GetRoom(roomId);
             if (room == null)
             {
@@ -49,7 +54,7 @@ namespace Imposter.UI.Controllers
             }
             if(player.RoomId != room.RoomId)
             {
-                await _gameService.AddPlayerToRoom(player, roomId);
+                await _gameService.AddPlayerToRoom(player.PlayerId, roomId);
             }
             if (room.InGame)
             {
@@ -67,7 +72,7 @@ namespace Imposter.UI.Controllers
             if (room.HostId == null)
             {
                 
-                await _gameService.MakePlayerHost(player, room);
+                await _gameService.MakePlayerHost(player.PlayerId,roomId);
             }
             TempData["FromIndex"] = true;
             return RedirectToAction(nameof(Lobby), new { roomId = roomId });
@@ -90,7 +95,7 @@ namespace Imposter.UI.Controllers
                 player.Name = Name;
                 player.PlayerId = Guid.NewGuid();
                 await _gameService.AddPlayer(player);
-                await _gameService.AddPlayerToRoom(player, roomId);
+                await _gameService.AddPlayerToRoom(player.PlayerId, roomId);
             }
             else
             {
@@ -118,6 +123,7 @@ namespace Imposter.UI.Controllers
             ViewBag.roomId = roomId;
             return View(players);
         }
+        
         [HttpGet("Game")]
         public async Task<IActionResult> Game(Guid roomId)
         {

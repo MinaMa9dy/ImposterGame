@@ -13,6 +13,6 @@ namespace Imposter.Core.RepositoriesContracts
         Task<int> RemoveConnectionFromPlayer(Guid playerId, string connectionId);
         Task<int> GetPlayerConnectionsCount(Guid playerId);
         Task<List<Connection>> GetPlayerConnections(Guid playerId);
-        Task<bool> RemoveAllConnections(Guid playerId);
+        Task<bool> RemoveAllConnectionsFromPlayer(Guid playerId);
     }
 }

@@ -6,46 +6,35 @@
 }
 
 <h1>Lobby</h1>
+<div class="col">
+    <h2>غرفة اللعب</h2>
+    <div>
+        <button id="btnLeave">خروج من الغرفة</button>
+    </div>
+</div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Name)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.State)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Score)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.State)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Score)
-            </td>
-            <td>
-                @Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |
-                @Html.ActionLink("Details", "Details", new { /* id=item.PrimaryKey */ }) |
-                @Html.ActionLink("Delete", "Delete", new { /* id=item.PrimaryKey */ })
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+<div>
+    <strong>اللاعبون:</strong>
+    <div id="playersCount" class="small">0 لاعب</div>
+</div>
+
+<div id="playersList">
+    @foreach(var itm in Model)
+    {
+        <div class="row justify-content-evenly">
+            <div class="col">
+                @itm.Name
+            </div>
+            <div class="col">
+                @itm.Score
+            </div>
+            <div class="col">
+                @itm.State
+            </div>
+        </div>
+    }
+</div>
+
 <div>
     <button class="btn btn-primary" onclick="start()">Start Game</button>
 </div>
@@ -59,8 +48,50 @@
     .then(() => console.log("SignalR connected"))
     .catch(err => console.error(err.toString()));
     // Handle incoming messages
-    connection.on("ReceiveMessage", function(message) {
-        alert(message); // or update the DOM instead of alert
+
+    function addPlayer(player) {
+        const playersList = document.getElementById("playersList");
+
+        // Create row with unique ID
+        const row = document.createElement("div");
+        row.classList.add("row", "justify-content-evenly");
+        row.id = `player-${player.id}`;    // ⭐ مهم: اللاعب ليه ID مميز في DOM
+
+        const nameCol = document.createElement("div");
+        nameCol.classList.add("col");
+        nameCol.textContent = player.name;
+
+        const scoreCol = document.createElement("div");
+        scoreCol.classList.add("col");
+        scoreCol.textContent = player.score;
+
+        const stateCol = document.createElement("div");
+        stateCol.classList.add("col");
+        stateCol.textContent = player.state;
+
+        row.appendChild(nameCol);
+        row.appendChild(scoreCol);
+        row.appendChild(stateCol);
+
+        playersList.appendChild(row);
+    }
+
+
+    // استقبال حدث userJoined
+    connection.on("userJoined", (player) => {
+        const normalizedPlayer = {
+        id: player.playerId,
+        Name: player.name,
+        Score: player.score,
+        State: player.state
+    };
+        addPlayer(normalizedPlayer);
+    });
+
+    // استقبال حدث userLeft لو حبيت تمسح اللاعب
+    connection.on("userLeft", (playerId) => {
+        const row = document.getElementById(`player-${playerId}`);
+        if (row) row.remove();
     });
 
 

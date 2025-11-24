@@ -29,15 +29,15 @@ namespace Imposter.Infrastructure.Repositories
             return result;
 
         }
+        public async Task<Connection?> GetConnection(string connectionId)
+        {
+            return await _appDbContext.connections.FirstOrDefaultAsync(c => c.ConnectionId == connectionId);
+        }
 
         public async Task<int> RemoveConnectionFromPlayer(Guid playerId, string connectionId)
         {
-            var Connection = new Connection
-            {
-                ConnectionId = connectionId,
-                PlayerId = playerId
-            };
-            _appDbContext.Remove(Connection);
+            var connection = await GetConnection(connectionId);
+            _appDbContext.connections.Remove(connection);
             int res = await _appDbContext.SaveChangesAsync();
             return res;
 
@@ -55,11 +55,14 @@ namespace Imposter.Infrastructure.Repositories
             return connections;
         }
 
-        public async Task<bool> RemoveAllConnections(Guid playerId)
+        public async Task<bool> RemoveAllConnectionsFromPlayer(Guid playerId)
         {
             var players = _appDbContext.connections.Where(r => r.PlayerId == playerId);
             _appDbContext.connections.RemoveRange(players);
-            return await _appDbContext.SaveChangesAsync() > 0;
+            int res = await _appDbContext.SaveChangesAsync();
+            return res > 0;
         }
+
+        
     }
 }
