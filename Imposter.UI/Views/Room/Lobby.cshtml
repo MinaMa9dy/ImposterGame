@@ -2,42 +2,59 @@
 
 @{
     ViewData["Title"] = "Lobby";
+    var isHost = ViewBag.IsHost;
     var roomId = ViewBag.roomId;
 }
 
-<h1>Lobby</h1>
-<div class="col">
-    <h2>غرفة اللعب</h2>
-    <div>
-        <button id="btnLeave">خروج من الغرفة</button>
+<div class="container py-5" style="margin-top:60px;">
+    <h3 class="text-white mb-4 text-center">Lobby</h3>
+
+    <!-- player cards -->
+    <div class="row g-3 mb-4" id="playersList">
+        @foreach(var itm in Model)
+        {
+            <div class="col-12 col-md-6 col-lg-4" id="@itm.playerId">
+                <div class="card rounded-3 border-0 shadow"
+                style="background:rgba(27, 38, 59, .9);">
+                    <div class="card-body d-flex justify-content-between align-items-center text-white">
+                        <div>
+                            <div class="fw-bold" style="font-size:1.1rem;">@itm.Name</div>
+                            <small class="opacity-75">Score: @itm.Score</small>
+                        </div>
+                        @if (itm.State)
+                        {
+                            <span class="badge rounded-pill"
+                            style="background:#00ff00; color:#000;">Ready</span>
+                        }else
+                        {
+                            <span class="badge rounded-pill"
+                            style="background:#ffff00; color:#000;">Not Ready</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+
     </div>
-</div>
 
-<div>
-    <strong>اللاعبون:</strong>
-    <div id="playersCount" class="small">0 لاعب</div>
-</div>
-
-<div id="playersList">
-    @foreach(var itm in Model)
+    <!-- start game button -->
+    @if (isHost)
     {
-        <div class="row justify-content-evenly">
-            <div class="col">
-                @itm.Name
-            </div>
-            <div class="col">
-                @itm.Score
-            </div>
-            <div class="col">
-                @itm.State
-            </div>
+        <div class="text-center">
+            <button class="btn rounded-pill px-5 py-2 fw-bold shadow"
+                    style="border:2px solid #ff00cc; color:#ff00cc; background:transparent;
+                       font-size:1.1rem; transition:all .3s ease;"
+                    onmouseover="this.style.background='#ff00cc'; this.style.color='#fff';"
+                    onmouseout="this.style.background='transparent'; this.style.color='#ff00cc';"
+                    onclick="start()">
+                Start Game
+            </button>
         </div>
     }
 </div>
 
-<div>
-    <button class="btn btn-primary" onclick="start()">Start Game</button>
-</div>
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 <script>
@@ -49,53 +66,78 @@
     .catch(err => console.error(err.toString()));
     // Handle incoming messages
 
-    function addPlayer(player) {
-        const playersList = document.getElementById("playersList");
+    
+    function addPlayerCard(player) {
+        const bg = player.state ? '#00ff00' : '#ffff00';
+        const text = player.state ? 'Ready' : 'Not Ready';
 
-        // Create row with unique ID
-        const row = document.createElement("div");
-        row.classList.add("row", "justify-content-evenly");
-        row.id = `player-${player.id}`;    // ⭐ مهم: اللاعب ليه ID مميز في DOM
+        const html = `
+            <div class="col-12 col-md-6 col-lg-4" id="${player.id}">
+                <div class="card rounded-3 border-0 shadow"
+                     style="background:rgba(27, 38, 59, .9);">
+                    <div class="card-body d-flex justify-content-between align-items-center text-white">
+                        <div>
+                            <div class="fw-bold" style="font-size:1.1rem;">${player.name}</div>
+                            <small class="opacity-75">Score: ${player.score}</small>
+                        </div>
+                        <span class="badge rounded-pill"
+                              style="background:${bg}; color:#000;">${text}</span>
+                    </div>
+                </div>
+            </div>`;
 
-        const nameCol = document.createElement("div");
-        nameCol.classList.add("col");
-        nameCol.textContent = player.name;
-
-        const scoreCol = document.createElement("div");
-        scoreCol.classList.add("col");
-        scoreCol.textContent = player.score;
-
-        const stateCol = document.createElement("div");
-        stateCol.classList.add("col");
-        stateCol.textContent = player.state;
-
-        row.appendChild(nameCol);
-        row.appendChild(scoreCol);
-        row.appendChild(stateCol);
-
-        playersList.appendChild(row);
+        document.getElementById('playersList').insertAdjacentHTML('beforeend', html);
     }
 
 
     // استقبال حدث userJoined
     connection.on("userJoined", (player) => {
+        debugger;
         const normalizedPlayer = {
-        id: player.playerId,
-        Name: player.name,
-        Score: player.score,
-        State: player.state
-    };
-        addPlayer(normalizedPlayer);
+            id: player.playerId,
+            name: player.name,
+            score: player.score,
+            state: player.state
+        };
+        addPlayerCard(normalizedPlayer);
     });
 
+    connection.on("joinedSuccessfully", (player) => {
+
+        
+        addMessage('joined');
+    });
+    function addMessage(message) {
+        const messagesDiv = document.getElementById("playersList");
+
+        const msgRow = document.createElement("div");
+        msgRow.classList.add("alert", "alert-info", "mt-2");
+        msgRow.textContent = message;
+
+        messagesDiv.appendChild(msgRow);
+    }
+
     // استقبال حدث userLeft لو حبيت تمسح اللاعب
-    connection.on("userLeft", (playerId) => {
-        const row = document.getElementById(`player-${playerId}`);
+    connection.on("userLeft", p => {
+        document.getElementById(p.playerId)?.remove();   // lower-case – matches DOM
+    });
+    connection.on("user1Left", (player) => {
+        debugger;
+        const row = document.getElementById(`${player.playerId}`);
         if (row) row.remove();
     });
+    connection.on("NextStage" , ()=>{
+        debugger;
+        
+        redirectPost(`/room/@roomId/SecretWord`, {});
+        // navigate manually
+    });
+    
+    
 
 
     function start() {
+        debugger;
         connection.invoke("StartGame","@roomId")
             .catch(err => console.error(err.toString()));
     }

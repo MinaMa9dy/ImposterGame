@@ -1,6 +1,55 @@
 ﻿
 
-<form method="post" action="enter-name">
-    <input type="text" name="Name" placeholder="Enter Your Name"/>
-    <button type="submit">Submit</button>
+
+<form action="enter-name" method="post">
+<div class="d-flex justify-content-evenly align-items-center min-vh-100">
+
+    <!-- centered stacked input + button -->
+    <!-- centered stacked input + button (BIGGER) -->
+    <!-- centered stacked input + button (LARGER INPUT TEXT ONLY) -->
+    <div class="d-flex flex-column align-items-center gap-4 mt-5">
+
+            <input name="Name" type="text"
+                   class="form-control rounded-pill px-4 py-3 text-center"
+                   placeholder="Enter your name"
+                   style="background:rgba(13,27,42,.7);
+                        border:1px solid rgba(0,255,255,.4);
+                        color:#fff; caret-color:#00ffff;
+                        font-size:1.5rem;           /* ← larger INPUT text */
+                        max-width:320px; width:100%;">
+
+            <button type="submit" class="btn rounded-pill px-5 fw-bold"
+                    style="border:2px solid #00ffff; color:#00ffff; background:transparent;
+                         font-size:1rem;
+                         transition:background .3s, color .3s;">
+                Save
+            </button>
+        <style>
+            /* make placeholder white */
+            input::placeholder {
+                color: #fff !important;
+                opacity: 1;
+            }
+
+            input::-webkit-input-placeholder {
+                color: #fff !important;
+            }
+
+            input::-moz-placeholder {
+                color: #fff !important;
+            }
+
+            input:-ms-input-placeholder {
+                color: #fff !important;
+            }
+        </style>
+    </div>
+
+</div>
+
 </form>
+
+@* <form method="post" action="enter-name"> *@
+@*     <input type="text" name="Name" placeholder="Enter Your Name"/> *@
+@*     <button type="submit">Submit</button> *@
+@* </form> *@

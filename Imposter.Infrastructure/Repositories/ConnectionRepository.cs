@@ -17,12 +17,13 @@ namespace Imposter.Infrastructure.Repositories
         {
             _appDbContext = appDbContext;
         }
-        public async Task<int> AddConnectionToPlayer(Guid playerId, string connectionId)
+        public async Task<int> AddConnectionToPlayer(Guid playerId, string connectionId , Guid roomId)
         {
             var Connection = new Connection
             {
                 ConnectionId = connectionId,
-                PlayerId = playerId
+                playerId = playerId,
+                roomId = roomId
             };
             await _appDbContext.connections.AddAsync(Connection);
             var result = await _appDbContext.SaveChangesAsync();
@@ -42,9 +43,9 @@ namespace Imposter.Infrastructure.Repositories
             return res;
 
         }
-        public async Task<int> GetPlayerConnectionsCount(Guid playerId)
+        public async Task<int> GetPlayerConnectionsInRoomCount(Guid playerId,Guid roomId)
         {
-            return await _appDbContext.connections.CountAsync(p => p.PlayerId == playerId);
+            return await _appDbContext.connections.CountAsync(p => p.playerId == playerId && p.roomId == roomId);
             
         }
 
@@ -57,12 +58,17 @@ namespace Imposter.Infrastructure.Repositories
 
         public async Task<bool> RemoveAllConnectionsFromPlayer(Guid playerId)
         {
-            var players = _appDbContext.connections.Where(r => r.PlayerId == playerId);
+            var players = _appDbContext.connections.Where(r => r.playerId == playerId);
             _appDbContext.connections.RemoveRange(players);
             int res = await _appDbContext.SaveChangesAsync();
             return res > 0;
         }
 
-        
+        public async Task<int> IsPlayerInRoom(Guid playerId, Guid roomId)
+        {
+            return await _appDbContext.connections
+                .Where(p => p.playerId == playerId && p.roomId == roomId)
+                .CountAsync();
+        }
     }
 }

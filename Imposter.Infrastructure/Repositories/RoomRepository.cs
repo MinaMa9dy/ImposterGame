@@ -56,10 +56,42 @@ namespace Imposter.Infrastructure.Repositories
         {
             var room = await GetRoomById(roomId);
             room.HostId = playerId;
-            _appDbContext.rooms.Update(room);
+            
             var res = await _appDbContext.SaveChangesAsync();
             return res > 0;
 
+        }
+
+        public async Task<bool> MakePlayerImposter(Guid playerId, Guid roomId)
+        {
+            var room = await GetRoomById(roomId);
+            room.ImposterId = playerId;
+
+            var res = await _appDbContext.SaveChangesAsync();
+            return res > 0;
+        }
+
+        public async Task<int> NextStage(Guid roomId)
+        {
+            var room = await GetRoomById(roomId);
+            room.Stage += 1;
+            room.Stage %= 6; // assuming there are 6 stages (0 to 5)
+            await _appDbContext.SaveChangesAsync();
+            return room.Stage;
+        }
+
+        public async Task<bool> SetSecretWord(Guid roomId, Guid secretWordId)
+        {
+            var room = await GetRoomById(roomId);
+            room.SecretWordId = secretWordId; 
+            return await _appDbContext.SaveChangesAsync() > 0;
+        }
+
+        public async Task StartGame(Guid roomId)
+        {
+            var room = await GetRoomById(roomId);
+            room.InGame = true;
+            await _appDbContext.SaveChangesAsync();
         }
 
         public async Task<int> UpdateRoom(Room dto)   // dto coming from client

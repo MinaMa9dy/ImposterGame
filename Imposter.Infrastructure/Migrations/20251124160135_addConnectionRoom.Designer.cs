@@ -4,6 +4,7 @@ using Imposter.Infrastructure.Dbcontext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Imposter.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251124160135_addConnectionRoom")]
+    partial class addConnectionRoom
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -27,7 +30,7 @@ namespace Imposter.Infrastructure.Migrations
                     b.Property<string>("ConnectionId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<Guid?>("playerId")
+                    b.Property<Guid?>("PlayerId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("roomId")
@@ -35,7 +38,7 @@ namespace Imposter.Infrastructure.Migrations
 
                     b.HasKey("ConnectionId");
 
-                    b.HasIndex("playerId");
+                    b.HasIndex("PlayerId");
 
                     b.HasIndex("roomId");
 
@@ -73,20 +76,17 @@ namespace Imposter.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("Category")
+                    b.Property<int>("Category")
                         .HasColumnType("int");
 
                     b.Property<Guid?>("HostId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("ImposterId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<bool>("InGame")
                         .HasColumnType("bit");
 
-                    b.Property<Guid?>("SecretWordId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("SecretWordText")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("Stage")
                         .HasColumnType("int");
@@ -95,27 +95,20 @@ namespace Imposter.Infrastructure.Migrations
 
                     b.HasIndex("HostId");
 
-                    b.HasIndex("ImposterId");
-
-                    b.HasIndex("SecretWordId");
+                    b.HasIndex("SecretWordText");
 
                     b.ToTable("rooms");
                 });
 
             modelBuilder.Entity("Imposter.Core.Domain.Entities.SecretWord", b =>
                 {
-                    b.Property<Guid>("SecretWordId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("Text")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("Category")
                         .HasColumnType("int");
 
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("SecretWordId");
+                    b.HasKey("Text");
 
                     b.ToTable("secretWords");
                 });
@@ -124,16 +117,15 @@ namespace Imposter.Infrastructure.Migrations
                 {
                     b.HasOne("Imposter.Core.Domain.Entities.Player", "Player")
                         .WithMany("Connections")
-                        .HasForeignKey("playerId");
+                        .HasForeignKey("PlayerId");
 
-                    b.HasOne("Imposter.Core.Domain.Entities.Room", "Room")
-                        .WithMany("connections")
-                        .HasForeignKey("roomId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                    b.HasOne("Imposter.Core.Domain.Entities.Room", "room")
+                        .WithMany()
+                        .HasForeignKey("roomId");
 
                     b.Navigation("Player");
 
-                    b.Navigation("Room");
+                    b.Navigation("room");
                 });
 
             modelBuilder.Entity("Imposter.Core.Domain.Entities.Player", b =>
@@ -153,18 +145,11 @@ namespace Imposter.Infrastructure.Migrations
                         .HasForeignKey("HostId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("Imposter.Core.Domain.Entities.Player", "Imposter")
-                        .WithMany()
-                        .HasForeignKey("ImposterId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
                     b.HasOne("Imposter.Core.Domain.Entities.SecretWord", "SecretWord")
                         .WithMany()
-                        .HasForeignKey("SecretWordId");
+                        .HasForeignKey("SecretWordText");
 
                     b.Navigation("Host");
-
-                    b.Navigation("Imposter");
 
                     b.Navigation("SecretWord");
                 });
@@ -177,8 +162,6 @@ namespace Imposter.Infrastructure.Migrations
             modelBuilder.Entity("Imposter.Core.Domain.Entities.Room", b =>
                 {
                     b.Navigation("Players");
-
-                    b.Navigation("connections");
                 });
 #pragma warning restore 612, 618
         }

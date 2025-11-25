@@ -17,5 +17,9 @@ namespace Imposter.Core.RepositoriesContracts
         Task<List<Room>> GetRooms();
         Task<int> UpdateRoom(Room room);
         Task<bool> MakePlayerHost(Guid playerId, Guid roomId);
+        Task<bool> MakePlayerImposter(Guid playerId, Guid roomId);
+        Task<int> NextStage(Guid roomId);
+        Task<bool> SetSecretWord(Guid roomId, Guid secretWordId);
+        Task StartGame(Guid roomId);
     }
 }

@@ -13,7 +13,9 @@ namespace Imposter.Core.Mapping
     {
         public RoomMapping()
         {
-            CreateMap<Room,RoomViewModel>();
+            CreateMap<Room,RoomViewModel>()
+                .ForMember(dest => dest.Count,
+                       opt => opt.MapFrom(src => src.Players.Count())); ;
         }
     }
 }

@@ -14,7 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(3); // how long it lives
+    options.IdleTimeout = TimeSpan.FromMinutes(5); // how long it lives
     options.Cookie.HttpOnly = true;                 // mitigate XSS
     options.Cookie.IsEssential = true;              // GDPR: cookie is required
 });
@@ -27,6 +27,7 @@ builder.Services.AddSignalR();
 builder.Services.AddScoped<IPlayerRepository, PlayerRepository>();
 builder.Services.AddScoped<IRoomRepository, RoomRepository>();
 builder.Services.AddScoped<IConnectionRepository, ConnectionRepository>();
+builder.Services.AddScoped<ISecretWordRepository, SecretWordRepository>();
 
 //Services
 builder.Services.AddScoped<IGameService, GameService>();

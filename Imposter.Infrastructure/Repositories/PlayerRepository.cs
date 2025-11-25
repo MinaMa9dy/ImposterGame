@@ -14,7 +14,18 @@ namespace Imposter.Infrastructure.Repositories
             _appDbContext = appDbContext;
         }
 
-        
+        public async Task<Player> CreatePlayer(string Name,int score ,bool state )
+        {
+            Player player = new Player()
+            {
+                PlayerId = Guid.NewGuid(),
+                Name = Name,
+                Score = score,
+                State = state
+            };
+            await _appDbContext.players.AddAsync(player);
+            return player;
+        }
 
         public async Task<int> AddPlayer(Player player)
         {
@@ -79,5 +90,15 @@ namespace Imposter.Infrastructure.Repositories
             players = await _appDbContext.players.ToListAsync();
             return players;
         }
+
+        public async Task<Player> ChangePlayerName(Guid playerId, string Name)
+        {
+            var player = await GetPlayerById(playerId);
+            player.Name = Name;
+            await _appDbContext.SaveChangesAsync();
+            return player;
+        }
+
+        
     }
 }

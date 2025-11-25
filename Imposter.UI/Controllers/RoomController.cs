@@ -55,6 +55,9 @@ namespace Imposter.UI.Controllers
             if(player.RoomId != room.RoomId)
             {
                 await _gameService.AddPlayerToRoom(player.PlayerId, roomId);
+                player.Room = null;
+                player.Connections = new List<Connection>();
+                HttpContext.Session.SetObject("PlayerName", player);
             }
             if (room.InGame)
             {
@@ -64,6 +67,7 @@ namespace Imposter.UI.Controllers
                 }
                 else
                 {
+                    TempData["FromIndex"] = true;
                     return RedirectToAction(nameof(Game), new { roomId = roomId });
                 }
 
@@ -73,6 +77,9 @@ namespace Imposter.UI.Controllers
             {
                 
                 await _gameService.MakePlayerHost(player.PlayerId,roomId);
+                player.Room = null;
+                player.Connections = new List<Connection>();
+                HttpContext.Session.SetObject("PlayerName", player);
             }
             TempData["FromIndex"] = true;
             return RedirectToAction(nameof(Lobby), new { roomId = roomId });
@@ -88,25 +95,25 @@ namespace Imposter.UI.Controllers
         [HttpPost("enter-name")]
         public async Task<IActionResult> EnterName(string Name, Guid roomId)
         {
-            var CurrentPlayer = HttpContext.Session.GetObject<Player>("PlayerName");
-            var player = new Player();
-            if (CurrentPlayer is null)
+            var existingPlayer = HttpContext.Session.GetObject<Player>("PlayerName");
+            var existingPlayerInDb = existingPlayer is not null ? await _gameService.GetPlayer(existingPlayer.PlayerId.Value) : null;
+            Player? SessionPlayer = new Player();
+            if (existingPlayerInDb is null)
             {
-                player.Name = Name;
-                player.PlayerId = Guid.NewGuid();
+                var player = await _gameService.CreatePlayer(Name);
                 await _gameService.AddPlayer(player);
                 await _gameService.AddPlayerToRoom(player.PlayerId, roomId);
+                SessionPlayer = player;
+            }else { 
+                await _gameService.UpdateNamePlayer(existingPlayerInDb.PlayerId, Name);
+                var x = await _gameService.AddPlayerToRoom(existingPlayerInDb.PlayerId, roomId);
+                SessionPlayer = await _gameService.GetPlayer(existingPlayerInDb.PlayerId);
+
             }
-            else
-            {
-                player = CurrentPlayer;
-                player.Name = Name;
-                await _gameService.UpdatePlayer(player);
-            }
-            Player player1 = new Player();
-            player1 = player;
-            player1.Room = null;
-            HttpContext.Session.SetObject("PlayerName", player);
+
+            SessionPlayer.Room = null;
+            SessionPlayer.Connections = new List<Connection>();
+            HttpContext.Session.SetObject("PlayerName", SessionPlayer);
             return RedirectToAction("Index", new { roomId = roomId });
         }
         #endregion
@@ -120,6 +127,8 @@ namespace Imposter.UI.Controllers
             }
             var room = await _gameService.GetRoom(roomId);
             var players = _mapper.Map<List<PlayerViewModel>>(room.Players.ToList());
+            var player = HttpContext.Session.GetObject<Player>("PlayerName");
+            ViewBag.isHost = room.HostId == player.PlayerId;
             ViewBag.roomId = roomId;
             return View(players);
         }
@@ -155,18 +164,12 @@ namespace Imposter.UI.Controllers
                     return RedirectToAction(nameof(Lobby), new { roomId = roomId });
             }
         }
-        [HttpGet("Remove")]
-        public async Task<IActionResult> RemoveRoom(Guid roomId)
+        [HttpPost("SecretWord")]
+        public IActionResult SecretWordNextPage(Guid roomId)
         {
-            var result = await _gameService.RemoveRoom(roomId);
-            if (result)
-            {
-                return Ok("Room removed successfully.");
-            }
-            else
-            {
-                return BadRequest("Could not remove room.");
-            }
+            
+            TempData["FromIndex"] = true;
+            return RedirectToAction(nameof(SecretWord), new { roomId = roomId });
         }
         [HttpGet("SecretWord")]
         public async Task<IActionResult> SecretWord(Guid roomId)
@@ -176,8 +179,19 @@ namespace Imposter.UI.Controllers
             {
                 return RedirectToAction(nameof(Index), new { roomId = roomId });
             }
+            var player = HttpContext.Session.GetObject<Player>("PlayerName");
             var room = await _gameService.GetRoom(roomId);
-            return View(model:room.SecretWord);
+            ViewBag.isHost = room.HostId == player.PlayerId;
+            ViewBag.roomId = roomId;
+            ViewBag.IsImposter = room.ImposterId == player.PlayerId;
+            return View(room.SecretWord);
+        }
+        [HttpPost("Discussion")]
+        public IActionResult DiscussionNextPage(Guid roomId)
+        {
+
+            TempData["FromIndex"] = true;
+            return RedirectToAction(nameof(Discussion), new { roomId = roomId });
         }
         [HttpGet("Discussion")]
         public async Task<IActionResult> Discussion(Guid roomId)
@@ -187,10 +201,20 @@ namespace Imposter.UI.Controllers
             {
                 return RedirectToAction(nameof(Index), new { roomId = roomId });
             }
+            var player = HttpContext.Session.GetObject<Player>("PlayerName");
+            var room = await _gameService.GetRoom(roomId);
+            ViewBag.isHost = room.HostId == player.PlayerId;
+            ViewBag.roomId = roomId;
             return View();
         }
+        [HttpPost("Voting")]
+        public IActionResult VotingNextPage(Guid roomId)
+        {
+            TempData["FromIndex"] = true;
+            return RedirectToAction(nameof(Voting), new { roomId = roomId });
+        }
         [HttpGet("Voting")]
-        public IActionResult Voting(Guid roomId)
+        public async Task<IActionResult> Voting(Guid roomId)
         {
             string? FromIndexString = TempData["FromIndex"]?.ToString();
             if (FromIndexString is null)
@@ -198,22 +222,10 @@ namespace Imposter.UI.Controllers
                 return RedirectToAction(nameof(Index), new { roomId = roomId });
             }
             var player = HttpContext.Session.GetObject<Player>("PlayerName");
-            return View(model:player);
-        }
-        [HttpPost("Voting")]
-        public async Task<IActionResult> Voting(Player player,Guid roomId)
-        {
-            string? FromIndexString = TempData["FromIndex"]?.ToString();
-            if (FromIndexString is null)
-            {
-                return RedirectToAction(nameof(Index), new { roomId = roomId });
-            }
-            var res = await _gameService.UpdatePlayer(player);
-            if(res == 0)
-            {
-                return BadRequest("Could not update player.");
-            }
-            return View(model: player);
+            var room = await _gameService.GetRoom(roomId);
+            var players = room.Players.Where(p => p.PlayerId != player.PlayerId).ToList();
+            var playersVM = _mapper.Map<List<PlayerViewModel>>(players);
+            return View(playersVM);
         }
 
         [HttpGet("Choosing")]
@@ -242,6 +254,19 @@ namespace Imposter.UI.Controllers
         }
 
 
+        [HttpGet("Remove")]
+        public async Task<IActionResult> RemoveRoom(Guid roomId)
+        {
+            var result = await _gameService.RemoveRoom(roomId);
+            if (result)
+            {
+                return Ok("Room removed successfully.");
+            }
+            else
+            {
+                return BadRequest("Could not remove room.");
+            }
+        }
 
     }
 }

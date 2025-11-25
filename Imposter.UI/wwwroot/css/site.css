@@ -131,7 +131,35 @@ body {
         flex: 1;
     }
 }
+/* site.css (or <style>) */
+html, body {
+    height: 100%; /* mandatory for min-vh-100 to work reliably */
+    overflow-x: hidden;
+}
 
+.home-wrapper {
+    min-height: 100vh; /* always full viewport height */
+    display: flex;
+    align-items: center; /* vertical centre */
+    justify-content: center;
+}
 .overflow-hidden {
     overflow: hidden;
 }
+.btn-neon {
+    background: linear-gradient(135deg, #0d1b2a, #1b263b);
+    border: 2px solid #00ffff;
+    color: #00ffff;
+    font-weight: 600;
+    letter-spacing: 1px;
+    padding: .5rem 1.5rem;
+    border-radius: 50rem;
+    box-shadow: 0 0 15px rgba(0, 255, 255, .5);
+    transition: all .3s ease;
+}
+
+    .btn-neon:hover {
+        background: linear-gradient(135deg, #1b263b, #0d1b2a);
+        color: #ffffff;
+        box-shadow: 0 0 25px #00ffff;
+    }

@@ -18,6 +18,8 @@ namespace Imposter.Core.RepositoriesContracts
         Task<int> AddPlayerToRoom(Guid playerId, Guid roomId);
         Task<int> RemovePlayerFromRoom(Guid playerId, Guid roomId);
         Task<List<Player>> GetAllPlayers();
+        Task<Player> ChangePlayerName(Guid playerId,string Name);
+        Task<Player> CreatePlayer(string Name, int score, bool state);
 
     }
 }

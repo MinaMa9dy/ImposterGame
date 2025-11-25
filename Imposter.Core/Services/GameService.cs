@@ -11,20 +11,22 @@ namespace Imposter.Core.Services
         private readonly IPlayerRepository _playerRepository;
         private readonly IRoomRepository _roomRepositories;
         private readonly IConnectionRepository _connectionRepository;
+        private readonly ISecretWordRepository _secretWordRepository;
         private readonly IMapper _mapper;
-        public GameService(IPlayerRepository playerRepository, IRoomRepository roomRepository, IConnectionRepository connectionRepository,IMapper mapper)
+        public GameService(IPlayerRepository playerRepository, IRoomRepository roomRepository, IConnectionRepository connectionRepository,ISecretWordRepository secretWordRepository,IMapper mapper)
         {
             _playerRepository = playerRepository;
             _roomRepositories = roomRepository;
             _connectionRepository = connectionRepository;
+            _secretWordRepository = secretWordRepository;
             _mapper = mapper;
         }
 
-        public async Task<int> AddConnectionToPlayer(Guid? playerId, string? connectionId)
+        public async Task<int> AddConnectionToPlayer(Guid? playerId, string? connectionId , Guid? roomId)
         {
-            var result = await _connectionRepository.AddConnectionToPlayer(playerId.Value,connectionId);
+            var result = await _connectionRepository.AddConnectionToPlayer(playerId.Value,connectionId,roomId.Value);
             if (result == 0) return -1;
-            else return await _connectionRepository.GetPlayerConnectionsCount(playerId.Value);
+            else return await _connectionRepository.GetPlayerConnectionsInRoomCount(playerId.Value,roomId.Value);
         }
 
         public async Task<bool> AddPlayer(Player? player)
@@ -33,11 +35,15 @@ namespace Imposter.Core.Services
             return res > 0;
 
         }
-
+        public Task<Player> CreatePlayer(string? Name, int score = 0, bool state= false)
+        {
+            return _playerRepository.CreatePlayer(Name, score, state);
+        }
         public async Task<int> AddPlayerToRoom(Guid? playerId, Guid? roomId)
         {
             var player = await _playerRepository.GetPlayerById(playerId.Value);
-            if (player == null)
+            var room = await _roomRepositories.GetRoomById(roomId.Value);
+            if (player == null || room is null)
             {
                 return 0;
             }
@@ -58,9 +64,9 @@ namespace Imposter.Core.Services
 
         }
 
-        public async Task<int> GetConnectionsCount(Guid? playerId)
+        public async Task<int> GetConnectionsCount(Guid? playerId,Guid? roomId)
         {
-            return await _connectionRepository.GetPlayerConnectionsCount(playerId.Value);
+            return await _connectionRepository.GetPlayerConnectionsInRoomCount(playerId.Value,roomId.Value);
         }
 
         public async Task<Player?> GetPlayer(Guid? playerId)
@@ -84,9 +90,15 @@ namespace Imposter.Core.Services
             return rooms;
         }
 
+        public async Task<int> IsPlayerInRoom(Guid? playerId, Guid? roomId)
+        {
+            return await _connectionRepository.IsPlayerInRoom(playerId.Value, roomId.Value);
+        }
+
         public async Task<bool> MakePlayerHost(Guid? playerId, Guid? roomId)
         {
-            return await _roomRepositories.MakePlayerHost(playerId.Value, roomId.Value);
+            await _roomRepositories.MakePlayerHost(playerId.Value, roomId.Value);
+            return await _playerRepository.AddPlayerToRoom(playerId.Value, roomId.Value) > 0;
         }
 
         public async Task<bool> RemoveAllRooms()
@@ -138,6 +150,15 @@ namespace Imposter.Core.Services
 
         public async Task<bool> RemovePlayerFromRoom(Guid? playerId, Guid? roomId)
         {
+            if(playerId == null || roomId == null)
+            {
+                return false;
+            }
+            var player = await  _playerRepository.GetPlayerById(playerId.Value);
+            if(player.RoomId != roomId)
+            {
+                return true;
+            }
             var res = await _playerRepository.RemovePlayerFromRoom(playerId.Value, roomId.Value);
             return res > 0;
         }
@@ -165,9 +186,27 @@ namespace Imposter.Core.Services
             throw new NotImplementedException();
         }
 
-        public Task<bool> StartGame(Guid? roomId)
+        public async Task<bool> StartGame(Guid? roomId)
         {
-            throw new NotImplementedException();
+            var room = await _roomRepositories.GetRoomByIdWithAll(roomId.Value);
+            Random random = new Random();
+            int val = random.Next(0, room.Players.Count());
+            var imposter = room.Players.ElementAt(val);
+            await SetSecretWord(roomId.Value);
+            await MakePlayerImposter(imposter.PlayerId, roomId.Value); // just to ensure host is set
+            await _roomRepositories.StartGame(roomId.Value);
+            return true;
+
+        }
+
+        public async Task<Player?> UpdateNamePlayer(Guid? playerId, string? Name)
+        {
+            var player = await _playerRepository.GetPlayerById(playerId.Value);
+            if (player == null)
+            {
+                return null;
+            }
+            return await _playerRepository.ChangePlayerName(playerId.Value, Name);
         }
 
         public async Task<int> UpdatePlayer(Player player)
@@ -176,6 +215,20 @@ namespace Imposter.Core.Services
             
         }
 
-        
+        public async Task<int> NextStage(Guid? roomId)
+        {
+            return await _roomRepositories.NextStage(roomId.Value);
+        }
+        public async Task SetSecretWord(Guid? roomId)
+        {
+            var SecretWord = await _secretWordRepository.PickRandomSecretWord();
+            await _roomRepositories.SetSecretWord(roomId.Value, SecretWord.SecretWordId.Value);
+        }
+
+        public async Task<bool> MakePlayerImposter(Guid? playerId, Guid? roomId)
+        {
+            await _roomRepositories.MakePlayerImposter(playerId.Value, roomId.Value);
+            return await _playerRepository.AddPlayerToRoom(playerId.Value, roomId.Value) > 0;
+        }
     }
 }

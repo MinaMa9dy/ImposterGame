@@ -1,0 +1,65 @@
+﻿@model List<PlayerViewModel>
+
+@{
+    ViewData["Title"] = "Voting";
+    var isHost = ViewBag.IsHost;
+    var roomId = ViewBag.roomId;
+}
+
+<h1>Voting</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.playerId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.State)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Score)
+            </td>
+            <td>
+                @Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |
+                @Html.ActionLink("Details", "Details", new { /* id=item.PrimaryKey */ }) |
+                @Html.ActionLink("Delete", "Delete", new { /* id=item.PrimaryKey */ })
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+<script>
+    var connection = new signalR.HubConnectionBuilder()
+        .withUrl("/gameHub")
+        .build();
+    connection.start()
+    .then(() => console.log("SignalR connected"))
+    .catch(err => console.error(err.toString()));
+    // Handle incoming messages
+
+
+    connection.on("NextStage" , ()=>{
+        debugger;
+
+        redirectPost(`/room/@roomId/Lobby`, {});
+        // navigate manually
+    });
+
+
+
+    function Next() {
+        connection.invoke("NextStage","@roomId")
+            .catch(err => console.error(err.toString()));
+    }
+
+</script>

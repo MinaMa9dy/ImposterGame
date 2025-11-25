@@ -4,6 +4,7 @@ using Imposter.Infrastructure.Dbcontext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Imposter.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251124182032_addRelationConnectionRoom")]
+    partial class addRelationConnectionRoom
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -73,20 +76,17 @@ namespace Imposter.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("Category")
+                    b.Property<int>("Category")
                         .HasColumnType("int");
 
                     b.Property<Guid?>("HostId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("ImposterId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<bool>("InGame")
                         .HasColumnType("bit");
 
-                    b.Property<Guid?>("SecretWordId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("SecretWordText")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("Stage")
                         .HasColumnType("int");
@@ -95,27 +95,20 @@ namespace Imposter.Infrastructure.Migrations
 
                     b.HasIndex("HostId");
 
-                    b.HasIndex("ImposterId");
-
-                    b.HasIndex("SecretWordId");
+                    b.HasIndex("SecretWordText");
 
                     b.ToTable("rooms");
                 });
 
             modelBuilder.Entity("Imposter.Core.Domain.Entities.SecretWord", b =>
                 {
-                    b.Property<Guid>("SecretWordId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("Text")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("Category")
                         .HasColumnType("int");
 
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("SecretWordId");
+                    b.HasKey("Text");
 
                     b.ToTable("secretWords");
                 });
@@ -153,18 +146,11 @@ namespace Imposter.Infrastructure.Migrations
                         .HasForeignKey("HostId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("Imposter.Core.Domain.Entities.Player", "Imposter")
-                        .WithMany()
-                        .HasForeignKey("ImposterId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
                     b.HasOne("Imposter.Core.Domain.Entities.SecretWord", "SecretWord")
                         .WithMany()
-                        .HasForeignKey("SecretWordId");
+                        .HasForeignKey("SecretWordText");
 
                     b.Navigation("Host");
-
-                    b.Navigation("Imposter");
 
                     b.Navigation("SecretWord");
                 });

@@ -4,6 +4,7 @@ using Imposter.Infrastructure.Dbcontext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Imposter.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251124230202_categoryempty")]
+    partial class categoryempty
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -79,9 +82,6 @@ namespace Imposter.Infrastructure.Migrations
                     b.Property<Guid?>("HostId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("ImposterId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<bool>("InGame")
                         .HasColumnType("bit");
 
@@ -94,8 +94,6 @@ namespace Imposter.Infrastructure.Migrations
                     b.HasKey("RoomId");
 
                     b.HasIndex("HostId");
-
-                    b.HasIndex("ImposterId");
 
                     b.HasIndex("SecretWordId");
 
@@ -153,18 +151,11 @@ namespace Imposter.Infrastructure.Migrations
                         .HasForeignKey("HostId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("Imposter.Core.Domain.Entities.Player", "Imposter")
-                        .WithMany()
-                        .HasForeignKey("ImposterId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
                     b.HasOne("Imposter.Core.Domain.Entities.SecretWord", "SecretWord")
                         .WithMany()
                         .HasForeignKey("SecretWordId");
 
                     b.Navigation("Host");
-
-                    b.Navigation("Imposter");
 
                     b.Navigation("SecretWord");
                 });

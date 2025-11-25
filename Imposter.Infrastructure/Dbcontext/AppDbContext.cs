@@ -23,11 +23,23 @@ namespace Imposter.Infrastructure.Dbcontext
             .HasForeignKey(r => r.HostId)
             .OnDelete(DeleteBehavior.SetNull);
 
+            modelBuilder.Entity<Room>()
+            .HasOne(r => r.Imposter)
+            .WithMany()  // host does NOT have collection of rooms
+            .HasForeignKey(r => r.ImposterId)
+            .OnDelete(DeleteBehavior.NoAction);
+
             //Players
             modelBuilder.Entity<Player>()
             .HasOne(p => p.Room)
             .WithMany(r => r.Players)
             .HasForeignKey(p => p.RoomId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Connection>()
+            .HasOne(p => p.Room)
+            .WithMany(r => r.connections)
+            .HasForeignKey(p => p.roomId)
             .OnDelete(DeleteBehavior.SetNull);
         }
         public DbSet<Player> players { get; set; }

@@ -10,7 +10,7 @@ namespace Imposter.Core.Domain.Entities
 {
     public class SecretWord
     {
-        [Key]
+        public Guid? SecretWordId { get; set; }
         public string Text { get; set; }
         public CategoryOptions Category { get; set; }
     }
