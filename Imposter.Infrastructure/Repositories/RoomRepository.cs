@@ -1,4 +1,5 @@
 ﻿using Imposter.Core.Domain.Entities;
+using Imposter.Core.Domain.Enums;
 using Imposter.Core.RepositoriesContracts;
 using Imposter.Infrastructure.Dbcontext;
 using Microsoft.EntityFrameworkCore;
@@ -42,7 +43,7 @@ namespace Imposter.Infrastructure.Repositories
 
         public async Task<List<Room>> GetRooms()
         {
-            return await _appDbContext.rooms.ToListAsync();
+            return await _appDbContext.rooms.Include(r => r.Players).ToListAsync();
 
         }
 
@@ -79,7 +80,22 @@ namespace Imposter.Infrastructure.Repositories
             await _appDbContext.SaveChangesAsync();
             return room.Stage;
         }
+        public async Task<Player> GetRandomPlayerFromRoom(Guid roomId)
+        {
+            Room? room = await GetRoomByIdWithAll(roomId);
+            var players = room.Players.ToList();
+            Random rand = new Random();
+            int index = rand.Next(players.Count);
+            return players[index];
 
+        }
+        public async Task<bool> SetCategory(Guid roomId,CategoryOptions category)
+        {
+            var room = await GetRoomById(roomId);
+            room.Category = category;
+
+            return await _appDbContext.SaveChangesAsync() > 0;
+        }
         public async Task<bool> SetSecretWord(Guid roomId, Guid secretWordId)
         {
             var room = await GetRoomById(roomId);
@@ -113,6 +129,30 @@ namespace Imposter.Infrastructure.Repositories
 
             // timestamp is still the db value, so concurrency check succeeds
             return await _appDbContext.SaveChangesAsync();
+        }
+        public async Task<bool> IsAllPlayersReady(Guid roomId)
+        {
+            var room = await GetRoomByIdWithAll(roomId);
+            foreach (var player in room.Players)
+            {
+                if (!player.State)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+        public async Task ResetStateOfAllPlayersInRoom(Guid roomId)
+        {
+            var room = await GetRoomByIdWithAll(roomId);
+            room.Players.Select(p => { p.State = false; return p; }).ToList();
+            await _appDbContext.SaveChangesAsync();
+        }
+        public async Task StopGame(Guid roomId)
+        {
+            var room = await GetRoomById(roomId);
+            room.InGame = false;
+            await _appDbContext.SaveChangesAsync();
         }
     }
 }

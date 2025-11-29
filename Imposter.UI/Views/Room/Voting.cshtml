@@ -2,41 +2,68 @@
 
 @{
     ViewData["Title"] = "Voting";
-    var isHost = ViewBag.IsHost;
     var roomId = ViewBag.roomId;
+    var myId = ViewBag.myId;   // current user id
 }
 
-<h1>Voting</h1>
+<div class="container py-5" style="margin-top:60px;">
+    <h3 class="text-white mb-4 text-center">Who is the Impostor?</h3>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.playerId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.State)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Score)
-            </td>
-            <td>
-                @Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |
-                @Html.ActionLink("Details", "Details", new { /* id=item.PrimaryKey */ }) |
-                @Html.ActionLink("Delete", "Delete", new { /* id=item.PrimaryKey */ })
-            </td>
-        </tr>
+    <!-- voting cards -->
+    <div class="row g-3 mb-4" id="voteCards">
+        @foreach (var p in Model.Where(x => x.playerId != myId))
+        {
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card vote-card rounded-3 border-0 shadow"
+                     data-pid="@p.playerId">
+                    <div class="card-body text-white text-center">
+                        <div class="fw-bold mb-1" style="font-size:1.1rem;">@p.Name</div>
+                        <small class="opacity-75">Score: @p.Score</small>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- selected bar -->
+    <div class="text-center d-none" id="selectedBar">
+        <span class="text-white me-3">You voted for: <strong id="votedName"></strong></span>
+        <button onclick="Next()" class="btn btn-submit px-4 py-2 rounded-pill fw-bold">
+            Confirm Vote
+        </button>
+    </div>
+</div>
+
+@section Styles{
+<style>
+    .vote-card{
+        background:rgba(27, 38, 59, .9);
+        cursor:pointer;
+        transition:all .3s ease;
+        border:2px solid transparent;
+    }
+    .vote-card:hover{
+        border-color:#00ffff;
+        box-shadow:0 0 15px rgba(0,255,255,.5);
+    }
+    .vote-card.selected{
+        border-color:#ff00cc;
+        box-shadow:0 0 20px rgba(255,0,204,.6);
+    }
+    .btn-submit{
+        background:transparent;
+        border:2px solid #ff00cc;
+        color:#ff00cc;
+        transition:all .3s ease;
+    }
+    .btn-submit:hover{
+        background:#ff00cc;
+        color:#fff;
+    }
+</style>
 }
-    </tbody>
-</table>
+
+@section Scripts{
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 <script>
     var connection = new signalR.HubConnectionBuilder()
@@ -48,18 +75,32 @@
     // Handle incoming messages
 
 
-    connection.on("NextStage" , ()=>{
+    connection.on("Waiting" , ()=>{
         debugger;
 
-        redirectPost(`/room/@roomId/Lobby`, {});
+        redirectPost(`/room/@roomId/Waiting`, {});
         // navigate manually
     });
+    const cards      = document.querySelectorAll('.vote-card');
+    const selectedBar= document.getElementById('selectedBar');
+    const votedName  = document.getElementById('votedName');
+    let chosenId     = null;
 
+    cards.forEach(c=>{
+        c.addEventListener('click',()=>{
+            cards.forEach(x=>x.classList.remove('selected'));
+            c.classList.add('selected');
+            chosenId = c.dataset.pid;
+            votedName.textContent = c.querySelector('.fw-bold').textContent;
+            selectedBar.classList.remove('d-none');
+        });
+    });
 
-
-    function Next() {
-        connection.invoke("NextStage","@roomId")
-            .catch(err => console.error(err.toString()));
-    }
-
+        function Next() {
+            debugger;
+            const name = votedName.textContent.trim();   // <-- the chosen name
+            connection.invoke("Waiting", "@roomId", "@myId", chosenId)
+                      .catch(err => console.error(err.toString()));
+        }
 </script>
+}

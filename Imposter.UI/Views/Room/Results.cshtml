@@ -1,0 +1,81 @@
+﻿@model IEnumerable<PlayerViewModel>
+@{
+    ViewData["Title"] = "Round Result";
+    var isHost = ViewBag.IsHost;
+    var roomId = ViewBag.RoomId;
+}
+
+<div class="container py-5" style="margin-top:60px;">
+    <h3 class="text-white mb-4 text-center">Scores</h3>
+
+    <!-- player cards -->
+    <div class="row g-3 mb-5" id="playersList">
+        @foreach (var p in Model)
+        {
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card rounded-3 border-0 shadow"
+                     style="background:rgba(27, 38, 59, .9);">
+                    <div class="card-body text-white text-center">
+                        <div class="fw-bold mb-1" style="font-size:1.1rem;">@p.Name</div>
+                        <small class="opacity-75">Score</small>
+                        <div class="fs-4" style="color:#00ffff;">@p.Score</div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Next button (host only) -->
+    @if (isHost)
+    {
+        <div class="text-center">
+            <button class="btn btn-next px-5 py-2 rounded-pill fw-bold shadow"
+                    onclick="nextStage()">
+                Next
+            </button>
+        </div>
+    }
+</div>
+
+@section Styles {
+    <style>
+        .btn-next {
+            background: transparent;
+            border: 2px solid #d400ff; /* vivid purple */
+            color: #d400ff;
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: all .35s ease;
+            box-shadow: 0 0 10px rgba(212,0,255,.4);
+        }
+
+            .btn-next:hover {
+                background: #d400ff;
+                color: #fff;
+                box-shadow: 0 0 25px #d400ff, inset 0 0 8px rgba(255,255,255,.55);
+                transform: translateY(-2px);
+            }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script>
+        const roomId = '@roomId';
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/gameHub")
+            .build();
+        connection.start()
+            .then(() => console.log("SignalR connected"))
+            .catch(err => console.error(err.toString()));
+        connection.on("NextStage" , (page)=>{
+            debugger;
+
+            redirectPost(`/room/@roomId/${page}`, {});
+            // navigate manually
+        });
+        function nextStage(){
+            connection.invoke("NextStage", "@roomId").catch(err => console.error(err));
+        }
+    </script>
+}

@@ -98,7 +98,25 @@ namespace Imposter.Infrastructure.Repositories
             await _appDbContext.SaveChangesAsync();
             return player;
         }
+        public async Task MakePlayerReady(Guid playerId)
+        {
+            var player = await GetPlayerById(playerId);
+            player.State = true;
+            await _appDbContext.SaveChangesAsync();
+        }
+        public async Task MakePlayerNotReady(Guid playerId)
+        {
+            var player = await GetPlayerById(playerId);
+            player.State = false;
+            await _appDbContext.SaveChangesAsync();
+        }
+        public async Task AddScore(Guid playerId)
+        {
+            var player = await GetPlayerById(playerId);
+            player.Score += 1;
+            await _appDbContext.SaveChangesAsync();
+        }
 
-        
+
     }
 }

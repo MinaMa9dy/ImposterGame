@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Imposter.Core.Domain.Entities;
+using Imposter.Core.Domain.Enums;
 using Imposter.Core.RepositoriesContracts;
 using Imposter.Core.ServicesContracts;
 using System.Reflection.Metadata.Ecma335;
@@ -98,6 +99,7 @@ namespace Imposter.Core.Services
         public async Task<bool> MakePlayerHost(Guid? playerId, Guid? roomId)
         {
             await _roomRepositories.MakePlayerHost(playerId.Value, roomId.Value);
+            await _playerRepository.MakePlayerReady(playerId.Value);
             return await _playerRepository.AddPlayerToRoom(playerId.Value, roomId.Value) > 0;
         }
 
@@ -129,14 +131,11 @@ namespace Imposter.Core.Services
             return true;
         }
 
-        public Task<bool> RemoveConnection(string? connectionId, Guid? player)
-        {
-            throw new NotImplementedException();
-        }
+        
 
-        public async Task<int> RemoveConnectionFromPlayer(Guid? playerId, string? connectionId)
+        public async Task<int> RemoveConnection(string? connectionId)
         {
-            var res = await _connectionRepository.RemoveConnectionFromPlayer(playerId.Value, connectionId);
+            var res = await _connectionRepository.RemoveConnection(connectionId);
             return res;
         }
 
@@ -149,12 +148,17 @@ namespace Imposter.Core.Services
 
 
         public async Task<bool> RemovePlayerFromRoom(Guid? playerId, Guid? roomId)
+        
         {
             if(playerId == null || roomId == null)
             {
                 return false;
             }
             var player = await  _playerRepository.GetPlayerById(playerId.Value);
+            if (player is null)
+            {
+                return false;
+            }
             if(player.RoomId != roomId)
             {
                 return true;
@@ -181,22 +185,25 @@ namespace Imposter.Core.Services
 
         }
 
-        public Task<bool> ResetRoom(Guid? roomId)
+        public async Task<bool> ResetRoom(Guid? roomId)
         {
-            throw new NotImplementedException();
+            await _roomRepositories.StopGame(roomId.Value);
+            return true;
         }
 
         public async Task<bool> StartGame(Guid? roomId)
         {
             var room = await _roomRepositories.GetRoomByIdWithAll(roomId.Value);
-            Random random = new Random();
-            int val = random.Next(0, room.Players.Count());
-            var imposter = room.Players.ElementAt(val);
             await SetSecretWord(roomId.Value);
+            var imposter = await _roomRepositories.GetRandomPlayerFromRoom(roomId.Value);
             await MakePlayerImposter(imposter.PlayerId, roomId.Value); // just to ensure host is set
             await _roomRepositories.StartGame(roomId.Value);
             return true;
 
+        }
+        public async Task SetCategoryForRoom(Guid? roomId, CategoryOptions? category)
+        {
+            await _roomRepositories.SetCategory(roomId.Value, category.Value);
         }
 
         public async Task<Player?> UpdateNamePlayer(Guid? playerId, string? Name)
@@ -209,11 +216,7 @@ namespace Imposter.Core.Services
             return await _playerRepository.ChangePlayerName(playerId.Value, Name);
         }
 
-        public async Task<int> UpdatePlayer(Player player)
-        {
-            return await _playerRepository.UpdatePlayer(player);
-            
-        }
+        
 
         public async Task<int> NextStage(Guid? roomId)
         {
@@ -229,6 +232,35 @@ namespace Imposter.Core.Services
         {
             await _roomRepositories.MakePlayerImposter(playerId.Value, roomId.Value);
             return await _playerRepository.AddPlayerToRoom(playerId.Value, roomId.Value) > 0;
+        }
+        public async Task MakePlayerReady(Guid? playerId)
+        {
+            await _playerRepository.MakePlayerReady(playerId.Value);
+        }
+        public async Task<bool> IsAllPlayersReady(Guid? roomId)
+        {
+            return await _roomRepositories.IsAllPlayersReady(roomId.Value);
+            
+        }
+        public async Task ResetStateOfAllPlayersInRoom(Guid? roomId)
+        {
+            await _roomRepositories.ResetStateOfAllPlayersInRoom(roomId.Value);
+        }
+        public async Task MakePlayerNotReady(Guid? playerId)
+        {
+            await _playerRepository.MakePlayerNotReady(playerId.Value);
+        }
+        public async Task<Connection> GetConnection(string? connectionId)
+        {
+            return await _connectionRepository.GetConnection(connectionId);
+        }
+        public Task AddScore(Guid? playerId)
+        {
+            return _playerRepository.AddScore(playerId.Value);
+        }
+        public async Task StopGame(Guid? roomId)
+        {
+            await _roomRepositories.StopGame(roomId.Value);
         }
     }
 }

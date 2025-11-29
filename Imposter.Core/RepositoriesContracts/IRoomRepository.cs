@@ -1,4 +1,5 @@
 ﻿using Imposter.Core.Domain.Entities;
+using Imposter.Core.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,5 +22,10 @@ namespace Imposter.Core.RepositoriesContracts
         Task<int> NextStage(Guid roomId);
         Task<bool> SetSecretWord(Guid roomId, Guid secretWordId);
         Task StartGame(Guid roomId);
+        Task<bool> SetCategory(Guid roomId, CategoryOptions category);
+        Task<Player> GetRandomPlayerFromRoom(Guid roomId);
+        Task<bool> IsAllPlayersReady(Guid roomId);
+        Task ResetStateOfAllPlayersInRoom(Guid roomId);
+        Task StopGame(Guid roomId);
     }
 }

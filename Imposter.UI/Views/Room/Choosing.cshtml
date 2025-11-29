@@ -1,0 +1,187 @@
+﻿@model (List<string> Words, string Correct, string PlayerId, string RoomId, bool HasAnswered)
+@{
+    ViewData["Title"] = "Impostor Choice";
+    var rand = new Random();
+    var shuffled = Model.Words.OrderBy(_ => rand.Next()).ToList();
+}
+<div class="container py-5" style="margin-top:60px;">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7 col-sm-10">
+            <h4 class="text-white mb-4 text-center">Pick the correct word</h4>
+
+            <!-- choices -->
+            <div class="row g-3 mb-4" id="choices">
+                @for (int i = 0; i < shuffled.Count; i++)
+                {
+                    <div class="col-6">
+                        <button class="btn btn-choice w-100 p-3 rounded-3"
+                                data-word="@shuffled[i]"
+                                data-correct="@(shuffled[i] == Model.Correct ? "1" : "0")"
+                        @(Model.HasAnswered ? "disabled" : "")>
+                            @shuffled[i]
+                        </button>
+                    </div>
+                }
+            </div>
+
+            <!-- result bar -->
+            <div id="resultBar" class="alert text-center text-white fw-bold d-none"></div>
+
+            <!-- next button -->
+            <div class="text-center">
+                <button id="nextBtn" class="btn btn-next px-4 py-2 rounded-pill fw-bold d-none"
+                        onclick="Next()">
+                    Next
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+    
+<style>
+    .btn-choice {
+        background: rgba(13, 27, 42, .85);
+        border: 2px solid #00f3ff;
+        color: #e6f7ff;
+        transition: all .35s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .btn-choice::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,.3), transparent);
+            transition: left .6s ease;
+            z-index: 0;
+        }
+
+        .btn-choice:hover:not(:disabled) {
+            border-color: #00f3ff;
+            color: #fff;
+            box-shadow: 0 0 18px #00f3ff, inset 0 0 10px rgba(0,243,255,.3);
+            transform: translateY(-2px);
+        }
+
+        .btn-choice:hover::before {
+            left: 100%;
+        }
+
+    .correct {
+        border-color: #39ff14 !important;
+        background: #39ff14 !important;
+        color: #000 !important;
+        box-shadow: 0 0 20px #39ff14, inset 0 0 10px rgba(57,255,20,.5);
+        transform: scale(1.03);
+    }
+
+    .wrong {
+        border-color: #ff2a6d !important;
+        background: #ff2a6d !important;
+        color: #000 !important;
+        box-shadow: 0 0 20px #ff2a6d, inset 0 0 10px rgba(255,42,109,.5);
+        transform: scale(1.03);
+    }
+
+    .btn-next {
+        background: transparent;
+        border: 2px solid #d400ff;
+        color: #d400ff;
+        transition: all .35s ease;
+    }
+
+        .btn-next:hover {
+            background: #d400ff;
+            color: #fff;
+            box-shadow: 0 0 25px #d400ff;
+        }
+</style>
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script>
+        const roomId      = '@Model.RoomId';
+        const playerId    = '@Model.PlayerId';
+        const correctWord = '@Model.Correct';
+        const hasAnswered = @Json.Serialize(Model.HasAnswered);   // bool
+    </script>
+    <script>
+        let sent = hasAnswered;   // lock on refresh
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/gameHub")
+            .build();
+        connection.start()
+            .then(() => console.log("SignalR connected"))
+            .catch(err => console.error(err.toString()));
+
+        connection.on("NextStage" , (page)=>{
+            debugger;
+
+            redirectPost(`/room/@Model.RoomId/${page}`, {});
+            // navigate manually
+        });
+
+        // show previous answer immediately
+        if (hasAnswered) {
+            const chosen = '@(TempData["ChosenWord"] ?? "")';
+            document.querySelectorAll('.btn-choice').forEach(btn => {
+                if (btn.dataset.word === chosen) {
+                    btn.classList.add('locked', btn.dataset.correct === '1' ? 'correct' : 'wrong');
+                }
+                if (btn.dataset.word === correctWord) {
+                    btn.classList.add('correct');
+                }
+                btn.disabled = true;
+            });
+            const correct = '@(TempData["ChosenCorrect"] ?? "")' === 'True';
+            const bar = document.getElementById('resultBar');
+            bar.textContent = correct ? '✅ Correct!' : '❌ Wrong!';
+            bar.classList.remove('d-none', 'alert-success', 'alert-danger');
+            bar.classList.add(correct ? 'alert-success' : 'alert-danger');
+            document.getElementById('nextBtn').classList.remove('d-none');
+        }
+
+        // first-time click
+        document.querySelectorAll('.btn-choice').forEach(btn => {
+            btn.addEventListener('click', function () {
+                if (sent) return;
+                sent = true;
+
+                const correct = this.dataset.correct === '1';
+                const chosenWord = this.dataset.word;
+
+                this.classList.add(correct ? 'correct' : 'wrong');
+                if (!correct) {
+                    document.querySelector('[data-correct="1"]').classList.add('correct');
+                }
+                const bar = document.getElementById('resultBar');
+                bar.textContent = correct ? '✅ Correct!' : '❌ Wrong!';
+                bar.classList.remove('d-none', 'alert-success', 'alert-danger');
+                bar.classList.add(correct ? 'alert-success' : 'alert-danger');
+                document.getElementById('nextBtn').classList.remove('d-none');
+
+                // store server-side (so refresh works)
+                fetch('/Room/' + roomId + '/ImpostorChoose', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ word: chosenWord, isCorrect: correct })
+                }).catch(err => console.error(err));
+
+                // notify hub
+                connection.invoke('SendImpostorResult', playerId, correct)
+                          .catch(err => console.error(err.toString()));
+            });
+        });
+
+        function Next() {
+            connection.invoke('NextStage', roomId).catch(err => console.error(err));
+        }
+    </script>
+}

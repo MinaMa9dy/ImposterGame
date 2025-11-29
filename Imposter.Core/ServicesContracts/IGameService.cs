@@ -1,4 +1,5 @@
 ﻿using Imposter.Core.Domain.Entities;
+using Imposter.Core.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +15,6 @@ namespace Imposter.Core.ServicesContracts
         Task<Room> CreateRoom();
         Task<bool> AddPlayer(Player? player);
         Task<Player> CreatePlayer(string? Name, int score = 0, bool state = false);
-        Task<int> UpdatePlayer(Player? player);
         Task<int> IsPlayerInRoom(Guid? playerId, Guid? roomId);
         Task<bool> RemovePlayer(Guid? playerId);
         Task<Player?> UpdateNamePlayer(Guid? playerId, string? Name);
@@ -31,8 +31,17 @@ namespace Imposter.Core.ServicesContracts
         Task<bool> RemoveAllRooms();
         Task<Player?> GetPlayer(Guid? Player);
         Task<int> AddConnectionToPlayer(Guid? player, string? connectionId, Guid? roomId);
-        Task<int> RemoveConnectionFromPlayer(Guid? player, string? connectionId);
+        Task<int> RemoveConnection(string? connectionId);
         Task<int> GetConnectionsCount(Guid? playerId, Guid? roomId);
         Task SetSecretWord(Guid? roomId);
+        Task SetCategoryForRoom(Guid? roomId, CategoryOptions? category);
+        Task MakePlayerReady(Guid? playerId);
+        Task<bool> IsAllPlayersReady(Guid? roomId);
+        Task ResetStateOfAllPlayersInRoom(Guid? roomId);
+        Task MakePlayerNotReady(Guid? playerId);
+        Task<Connection> GetConnection(string? connectionId);
+        Task AddScore(Guid? playerId);
+        Task StopGame(Guid? roomId);
+
     }
 }

@@ -8,6 +8,6 @@ namespace Imposter.Core.Domain.Enums
 {
     public enum CategoryOptions
     {
-        Football,Science
+        General, Movies, Football, Geography, Science, History
     }
 }

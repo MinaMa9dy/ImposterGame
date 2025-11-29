@@ -13,5 +13,6 @@ namespace Imposter.Core.Domain.Entities
         public Guid? SecretWordId { get; set; }
         public string Text { get; set; }
         public CategoryOptions Category { get; set; }
+        public List<string> Choices { get; set; } = new List<string>();
     }
 }

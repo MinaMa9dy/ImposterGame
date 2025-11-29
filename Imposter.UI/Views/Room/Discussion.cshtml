@@ -5,13 +5,15 @@
     var roomId = ViewBag.roomId;
 }
 
-<h1>Discussion</h1>
+<div class="container py-5 text-center" style="margin-top:30vh;">
+    <h3 class="text-white mb-4 text-center">Discussion</h3>
 @if (isHost)
 {
-    <div>
-        <a class="btn btn-outline-success" onclick="Next()">NextGame</a>
-    </div>
+    <button onclick="Next()" class="btn btn-neon px-4 py-2 rounded-pill">
+        Next
+    </button>
 }
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 <script>
     var connection = new signalR.HubConnectionBuilder()

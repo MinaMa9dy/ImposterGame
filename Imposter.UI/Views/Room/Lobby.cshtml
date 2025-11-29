@@ -1,144 +1,226 @@
 ﻿@model IEnumerable<PlayerViewModel>
-
 @{
     ViewData["Title"] = "Lobby";
+    var playerId = ViewBag.PlayerId;
     var isHost = ViewBag.IsHost;
-    var roomId = ViewBag.roomId;
+    var roomId = ViewBag.RoomId;
+    var categories = (CategoryOptions[])ViewBag.categories;
+    var selected = ViewBag.selected;
 }
 
 <div class="container py-5" style="margin-top:60px;">
     <h3 class="text-white mb-4 text-center">Lobby</h3>
 
-    <!-- player cards -->
+    <!-- CATEGORY -->
+    <div class="row mb-4">
+        <div class="col-12 col-md-6 col-lg-4 mx-auto">
+            <div class="card rounded-3 border-0 shadow"
+                 style="background:rgba(27, 38, 59, .9);">
+                <div class="card-body text-white text-center">
+                    <label for="categorySelect" class="form-label fw-bold mb-2">Game Category</label>
+                    @if (isHost)
+                    {
+                        <select id="categorySelect" class="form-select rounded-pill text-center"
+                                style="background:rgba(13, 27, 42, .7);
+                                       border:1px solid rgba(0,255,255,.4);
+                                       color:#fff;">
+                            @foreach (var c in categories)
+                            {
+                                <option value="@c" selected="@(c == selected)">@c</option>
+                            }
+                        </select>
+                    }
+                    else
+                    {
+                        <h3 id="categoryText" class="text-white mb-4 text-center">Category : @selected</h3>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PLAYER CARDS (untouched) -->
     <div class="row g-3 mb-4" id="playersList">
-        @foreach(var itm in Model)
+        @foreach (var itm in Model)
         {
             <div class="col-12 col-md-6 col-lg-4" id="@itm.playerId">
                 <div class="card rounded-3 border-0 shadow"
-                style="background:rgba(27, 38, 59, .9);">
+                     style="background:rgba(27, 38, 59, .9);">
                     <div class="card-body d-flex justify-content-between align-items-center text-white">
                         <div>
                             <div class="fw-bold" style="font-size:1.1rem;">@itm.Name</div>
                             <small class="opacity-75">Score: @itm.Score</small>
                         </div>
-                        @if (itm.State)
-                        {
-                            <span class="badge rounded-pill"
-                            style="background:#00ff00; color:#000;">Ready</span>
-                        }else
-                        {
-                            <span class="badge rounded-pill"
-                            style="background:#ffff00; color:#000;">Not Ready</span>
-                        }
+                        <span class="badge rounded-pill"
+                              style="background:@(itm.State ? "#00ff00" : "#ffff00"); color:#000;">
+                            @(itm.State ? "Ready" : "Not Ready")
+                        </span>
                     </div>
                 </div>
             </div>
         }
-
-
     </div>
 
-    <!-- start game button -->
-    @if (isHost)
-    {
-        <div class="text-center">
-            <button class="btn rounded-pill px-5 py-2 fw-bold shadow"
-                    style="border:2px solid #ff00cc; color:#ff00cc; background:transparent;
-                       font-size:1.1rem; transition:all .3s ease;"
-                    onmouseover="this.style.background='#ff00cc'; this.style.color='#fff';"
-                    onmouseout="this.style.background='transparent'; this.style.color='#ff00cc';"
-                    onclick="start()">
+    <!-- ACTION BAR -->
+    <div class="text-center">
+        @if (isHost)
+        {
+            <button class="btn btn-start px-5 py-2 rounded-pill fw-bold shadow"
+                    onclick="startGame()">
                 Start Game
             </button>
-        </div>
-    }
+        }
+        else
+        {
+            <button onclick="ready()" id="readyBtn" class="btn btn-ready px-5 py-2 rounded-pill fw-bold">
+                Ready
+            </button>
+        }
+    </div>
 </div>
 
 
+    <style>
+        /* ---------- ready button (lime neon) ---------- */
+        .btn-ready {
+            background: transparent;
+            border: 2px solid #adff2f;
+            color: #adff2f;
+            font-weight: 600;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+            transition: all .35s ease;
+            box-shadow: 0 0 12px rgba(173,255,47,.35);
+        }
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
-<script>
-    var connection = new signalR.HubConnectionBuilder()
+            .btn-ready::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,.3), transparent);
+                transition: left .6s ease;
+                z-index: 0;
+            }
+
+            .btn-ready:hover {
+                border-color: #adff2f;
+                color: #0d1b2a;
+                background: #adff2f;
+                box-shadow: 0 0 25px #adff2f, inset 0 0 8px rgba(255,255,255,.55);
+                transform: translateY(-2px);
+            }
+
+            .btn-ready.locked {
+                border-color: #39ff14 !important;
+                background: #39ff14 !important;
+                color: #000 !important;
+                box-shadow: 0 0 20px #39ff14;
+                pointer-events: none;
+            }
+
+        /* ---------- start button (cyan neon) ---------- */
+        .btn-start {
+            background: transparent;
+            border: 2px solid #00ffff;
+            color: #00ffff;
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: all .35s ease;
+            box-shadow: 0 0 15px rgba(0,255,255,.4);
+        }
+
+            .btn-start:hover {
+                background: #00ffff;
+                color: #0d1b2a;
+                box-shadow: 0 0 25px #00ffff;
+            }
+    </style>
+
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script>
+        
+
+        var connection = new signalR.HubConnectionBuilder()
         .withUrl("/gameHub")
         .build();
-    connection.start()
-    .then(() => console.log("SignalR connected"))
-    .catch(err => console.error(err.toString()));
-    // Handle incoming messages
+        connection.start()
+        .then(() => console.log("SignalR connected"))
+        .catch(err => console.error(err.toString()));
 
-    
-    function addPlayerCard(player) {
-        const bg = player.state ? '#00ff00' : '#ffff00';
-        const text = player.state ? 'Ready' : 'Not Ready';
+        connection.on("userJoined", (player) =>{
+            debugger;
+            addPlayerCard(player);
+        });
+        connection.on("userLeft", p => document.getElementById(p.playerId)?.remove());
+        connection.on("NextStage", page => redirectPost(`/room/@roomId/${page}`, {}));
+        connection.on("CategoryChanged",(category) =>{
+            document.getElementById('categoryText').textContent = `Category : ${category}`;
+        });
 
-        const html = `
-            <div class="col-12 col-md-6 col-lg-4" id="${player.id}">
-                <div class="card rounded-3 border-0 shadow"
-                     style="background:rgba(27, 38, 59, .9);">
-                    <div class="card-body d-flex justify-content-between align-items-center text-white">
-                        <div>
-                            <div class="fw-bold" style="font-size:1.1rem;">${player.name}</div>
-                            <small class="opacity-75">Score: ${player.score}</small>
+        /* ---------- host – category change ---------- */
+        const categorySelect = document.getElementById('categorySelect');
+        if (categorySelect) {
+        categorySelect.addEventListener('change', function () {
+            const newCat = this.value;               // <-- selected option
+            connection.invoke("ChangeCategory", "@roomId", newCat)
+                       .catch(err => console.error(err));
+        });
+    }
+
+        /* ---------- host – start game ---------- */
+        function startGame(){
+            connection.invoke("StartGame", "@roomId").catch(err => console.error(err));
+        }
+
+        /* ---------- player – ready toggle ---------- */
+        function ready(){
+            connection.invoke("ready","@roomId","@playerId")
+        }
+        connection.on("PlayerReady", p => {
+            debugger;
+            const card = document.getElementById(p.playerId);
+            if (!card) return;                       // not on screen
+            const badge = card.querySelector('.badge');
+            if (!badge) return;
+
+            const isReady = p.state;                 // bool from hub
+            badge.style.background = isReady ? '#00ff00' : '#ffff00';
+            badge.style.color        = '#000';
+            badge.textContent        = isReady ? 'Ready' : 'Not Ready';
+        });
+        /* ---------- helper – add player card ---------- */
+        function addPlayerCard(p){
+            const bg = p.state ? '#00ff00' : '#ffff00';
+            const text = p.state ? 'Ready' : 'Not Ready';
+            const html = `
+                <div class="col-12 col-md-6 col-lg-4" id="${p.playerId}">
+                    <div class="card rounded-3 border-0 shadow" style="background:rgba(27, 38, 59, .9);">
+                        <div class="card-body d-flex justify-content-between align-items-center text-white">
+                            <div>
+                                <div class="fw-bold" style="font-size:1.1rem;">${p.name}</div>
+                                <small class="opacity-75">Score: ${p.score}</small>
+                            </div>
+                            <span class="badge rounded-pill" style="background:${bg}; color:#000;">${text}</span>
                         </div>
-                        <span class="badge rounded-pill"
-                              style="background:${bg}; color:#000;">${text}</span>
                     </div>
-                </div>
-            </div>`;
+                </div>`;
+            document.getElementById('playersList').insertAdjacentHTML('beforeend', html);
+        }
+            const startBtn = document.querySelector('.btn-start');
+    if (startBtn) startBtn.disabled = true;   // initially locked
 
-        document.getElementById('playersList').insertAdjacentHTML('beforeend', html);
-    }
+    connection.on("AllPlayersReady", () => {
+        if (startBtn) startBtn.disabled = false;   // unlock
+    });
 
-
-    // استقبال حدث userJoined
-    connection.on("userJoined", (player) => {
+    connection.on("NotAllPlayersReady", () => {
         debugger;
-        const normalizedPlayer = {
-            id: player.playerId,
-            name: player.name,
-            score: player.score,
-            state: player.state
-        };
-        addPlayerCard(normalizedPlayer);
+        if (startBtn) startBtn.disabled = true;    // lock again
     });
-
-    connection.on("joinedSuccessfully", (player) => {
-
-        
-        addMessage('joined');
-    });
-    function addMessage(message) {
-        const messagesDiv = document.getElementById("playersList");
-
-        const msgRow = document.createElement("div");
-        msgRow.classList.add("alert", "alert-info", "mt-2");
-        msgRow.textContent = message;
-
-        messagesDiv.appendChild(msgRow);
-    }
-
-    // استقبال حدث userLeft لو حبيت تمسح اللاعب
-    connection.on("userLeft", p => {
-        document.getElementById(p.playerId)?.remove();   // lower-case – matches DOM
-    });
-    connection.on("user1Left", (player) => {
-        debugger;
-        const row = document.getElementById(`${player.playerId}`);
-        if (row) row.remove();
-    });
-    connection.on("NextStage" , ()=>{
-        debugger;
-        
-        redirectPost(`/room/@roomId/SecretWord`, {});
-        // navigate manually
-    });
-    
-    
-
-
-    function start() {
-        debugger;
-        connection.invoke("StartGame","@roomId")
-            .catch(err => console.error(err.toString()));
-    }
-</script>
+    </script>

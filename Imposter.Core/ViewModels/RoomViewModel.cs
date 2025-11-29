@@ -10,6 +10,7 @@ namespace Imposter.Core.ViewModels
     public class RoomViewModel
     {
         public Guid? roomId { get; set; }
+        public string Name { get; set; }
         public bool InGame { get; set; }
         public int Count { get; set; }
         public CategoryOptions category { get; set; }

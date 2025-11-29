@@ -13,9 +13,11 @@ namespace Imposter.Core.Mapping
     {
         public RoomMapping()
         {
-            CreateMap<Room,RoomViewModel>()
+            CreateMap<Room, RoomViewModel>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Host.Name))
                 .ForMember(dest => dest.Count,
-                       opt => opt.MapFrom(src => src.Players.Count())); ;
+                       opt => opt.MapFrom(src => src.Players.Count()));
+                
         }
     }
 }

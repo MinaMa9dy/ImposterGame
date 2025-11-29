@@ -6,7 +6,7 @@ namespace Imposter.Core.Domain.Entities
     public class Room
     {
         public Guid? RoomId { get; set; }
-        public CategoryOptions? Category { get; set; }
+        public CategoryOptions? Category { get; set; } = CategoryOptions.General;
         public Guid? SecretWordId { get; set; }
         public SecretWord? SecretWord { get; set; }
         public Guid? HostId { get; set; }

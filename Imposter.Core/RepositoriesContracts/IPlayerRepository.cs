@@ -20,6 +20,9 @@ namespace Imposter.Core.RepositoriesContracts
         Task<List<Player>> GetAllPlayers();
         Task<Player> ChangePlayerName(Guid playerId,string Name);
         Task<Player> CreatePlayer(string Name, int score, bool state);
+        Task MakePlayerReady(Guid playerId);
+        Task MakePlayerNotReady(Guid playerId);
+        Task AddScore(Guid playerId);
 
     }
 }

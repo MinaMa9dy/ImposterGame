@@ -35,7 +35,7 @@ namespace Imposter.UI.Controllers
         [HttpGet("Online")]
         public async Task<IActionResult> Online()
         {
-            ViewBag.IsOnline = HttpContext.Session.GetString("IsOnline");
+            
             var rooms = await _gameService.GetRooms();
             var roomsVM = _mapper.Map<List<RoomViewModel>>(rooms);
 

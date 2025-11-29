@@ -35,7 +35,7 @@ namespace Imposter.Infrastructure.Repositories
             return await _appDbContext.connections.FirstOrDefaultAsync(c => c.ConnectionId == connectionId);
         }
 
-        public async Task<int> RemoveConnectionFromPlayer(Guid playerId, string connectionId)
+        public async Task<int> RemoveConnection(string connectionId)
         {
             var connection = await GetConnection(connectionId);
             _appDbContext.connections.Remove(connection);

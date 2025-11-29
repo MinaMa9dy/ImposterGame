@@ -14,7 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(5); // how long it lives
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // how long it lives
     options.Cookie.HttpOnly = true;                 // mitigate XSS
     options.Cookie.IsEssential = true;              // GDPR: cookie is required
 });

@@ -1,0 +1,68 @@
+﻿@model string
+@{
+    ViewData["Title"] = "TheImposterIs";
+    var Imposter = ViewBag.Name;
+    
+}
+
+<div class="container py-5" style="margin-top:60px;">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7 col-sm-10">
+            <div class="card rounded-3 border-0 shadow-lg text-center p-4"
+                 style="background:rgba(27, 38, 59, .95);
+                        border:2px solid #ff00cc;
+                        box-shadow:0 0 25px rgba(255,0,204,.6);">
+
+                <div class="text-uppercase fw-bold mb-3"
+                     style="color:#ff00cc; letter-spacing:2px; font-size:1.2rem;">
+                    The Imposter is
+                </div>
+
+                <div class="text-white mb-4">
+                    <div class="fw-bold mb-2" style="font-size:2rem;">@Imposter</div>
+                </div>
+
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .btn-glow {
+            background: transparent;
+            border: 2px solid #ff00cc;
+            color: #ff00cc;
+            transition: all .3s ease;
+        }
+
+            .btn-glow:hover {
+                background: #ff00cc;
+                color: #fff;
+                box-shadow: 0 0 20px #ff00cc;
+            }
+    </style>
+}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+<script>
+    var connection = new signalR.HubConnectionBuilder()
+        .withUrl("/gameHub")
+        .build();
+    connection.start()
+    .then(() => console.log("SignalR connected"))
+    .catch(err => console.error(err.toString()));
+    // Handle incoming messages
+
+    connection.on("NextStage" , (page)=>{
+        debugger;
+
+        redirectPost(`/room/@Model/${page}`, {});
+        // navigate manually
+    });
+
+
+
+
+    
+</script>
